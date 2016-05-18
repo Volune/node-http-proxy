@@ -337,6 +337,7 @@ proxyServer.listen(8015);
 *  **hostRewrite**: rewrites the location hostname on (301/302/307/308) redirects.
 *  **autoRewrite**: rewrites the location host/port on (301/302/307/308) redirects based on requested host/port. Default: false.
 *  **protocolRewrite**: rewrites the location protocol on (301/302/307/308) redirects to 'http' or 'https'. Default: null.
+*  **cookieDomainRewrite**: rewrites domain of `set-cookie` headers. `""` to remove the domain. Can provide an object to map domains one by one. Default: `false`.
 *  **headers**: object with extra headers to be added to target requests.
 
 **NOTE:**

@@ -206,24 +206,72 @@ describe('lib/http-proxy/passes/web-outgoing.js', function () {
   });
 
   describe('#writeHeaders', function() {
-    var proxyRes = {
-      headers: {
-        hey: 'hello',
-        how: 'are you?'
-      }
-    };
+    beforeEach(function() {
+      this.proxyRes = {
+        headers: {
+          hey: 'hello',
+          how: 'are you?',
+          'set-cookie': 'hello; domain=my.domain; path=/'
+        }
+      };
+      this.res = {
+        setHeader: function(k, v) {
+          this.headers[k] = v;
+        },
+        headers: {}
+      };
+    });
 
-    var res = {
-      setHeader: function(k, v) {
-        this.headers[k] = v;
-      },
-      headers: {}
-    };
+    it("writes headers", function() {
+      httpProxy.writeHeaders({}, this.res, this.proxyRes);
 
-    httpProxy.writeHeaders({}, res, proxyRes);
+      expect(this.res.headers.hey).to.eql('hello');
+      expect(this.res.headers.how).to.eql('are you?');
+    });
 
-    expect(res.headers.hey).to.eql('hello');
-    expect(res.headers.how).to.eql('are you?');
+    it("rewrites domain", function() {
+      var options = {
+        cookieDomainRewrite: "my.new.domain"
+      };
+
+      httpProxy.writeHeaders({}, this.res, this.proxyRes, options);
+
+      expect(this.res.headers['set-cookie']).to.eql('hello; domain=my.new.domain; path=/');
+    });
+    
+    it("removes domain", function() {
+      var options = {
+        cookieDomainRewrite: ""
+      };
+
+      httpProxy.writeHeaders({}, this.res, this.proxyRes, options);
+
+      expect(this.res.headers['set-cookie']).to.eql('hello; path=/');
+    });
+
+    it("rewrites headers with advanced configuration", function() {
+      var options = {
+        cookieDomainRewrite: {
+          '*': '',
+          'my.old.domain': 'my.new.domain',
+          'my.special.domain': 'my.special.domain'
+        }
+      };
+      this.proxyRes.headers['set-cookie'] = [
+        'hello-on-my.domain; domain=my.domain; path=/',
+        'hello-on-my.old.domain; domain=my.old.domain; path=/',
+        'hello-on-my.special.domain; domain=my.special.domain; path=/'
+      ];
+
+      httpProxy.writeHeaders({}, this.res, this.proxyRes, options);
+
+      expect(this.res.headers['set-cookie'])
+        .to.contain('hello-on-my.domain; path=/');
+      expect(this.res.headers['set-cookie'])
+        .to.contain('hello-on-my.old.domain; domain=my.new.domain; path=/');
+      expect(this.res.headers['set-cookie'])
+        .to.contain('hello-on-my.special.domain; domain=my.special.domain; path=/');
+    });
   });
 
 
