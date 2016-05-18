@@ -229,6 +229,14 @@ describe('lib/http-proxy/passes/web-outgoing.js', function () {
       expect(this.res.headers.how).to.eql('are you?');
     });
 
+    it("does not rewrite domain", function() {
+      var options = {};
+
+      httpProxy.writeHeaders({}, this.res, this.proxyRes, options);
+
+      expect(this.res.headers['set-cookie']).to.eql('hello; domain=my.domain; path=/');
+    });
+    
     it("rewrites domain", function() {
       var options = {
         cookieDomainRewrite: "my.new.domain"
@@ -238,7 +246,7 @@ describe('lib/http-proxy/passes/web-outgoing.js', function () {
 
       expect(this.res.headers['set-cookie']).to.eql('hello; domain=my.new.domain; path=/');
     });
-    
+
     it("removes domain", function() {
       var options = {
         cookieDomainRewrite: ""
